@@ -4,6 +4,8 @@ var app = express();
 var server = require('http').createServer(app);
 var io = require('socket.io')(server);
 
+app.set('port', (process.env.PORT || 5000))
+
 io.on('connection', function(socket){
   socket.on('user command', function(msg){
     var re = /(?:weather\s+)(\d{5})/;
@@ -24,6 +26,6 @@ app.get('/', function(req, res){
   res.sendfile('index.html');
 });
 
-server.listen(3000, function(){
-  console.log('listening on *:3000');
+server.listen(app.get('port'), function(){
+  console.log('listening on:' + app.get('port'));
 });
