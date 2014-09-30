@@ -1,0 +1,10 @@
+{
+  "name": "okay",
+  "description": "Simple test app for web command line",
+  "version": "0.0.1",
+  "private": true,
+  "dependencies": {
+    "express": "4.9.5",
+    "socket.io": "^1.1.0"
+  }
+}
