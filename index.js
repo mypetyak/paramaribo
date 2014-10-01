@@ -13,6 +13,7 @@ app.set('port', (process.env.PORT || 5000))
 // PatternWorker is the base interface for all pattern/response objects
 function PatternWorker(){
   events.EventEmitter.call(this);
+  this.findings = [];
   this.pattern = null;
 }
 PatternWorker.prototype = Object.create(events.EventEmitter.prototype);
@@ -23,8 +24,11 @@ PatternWorker.prototype.eat = function(message){
   return this.digest(matches);
 }
 
+PatternWorker.prototype.parse_findings = function(){
+  return null;
+}
+
 PatternWorker.prototype.digest = function(matches){
-  // return false;
   this.emit('done eating', null);
 }
 
@@ -39,38 +43,60 @@ WeatherPW.prototype.constructor = WeatherPW;
 // Redefine the 'digest' method for specific weather-related purpose
 WeatherPW.prototype.digest = function(matches){
   if (matches && matches.length > 1){
-    var zip = matches[1];
-    var uri = 'http://api.openweathermap.org/data/2.5/weather?q=' + zip;
+    this.zip = matches[1];
+    var uri = 'http://api.openweathermap.org/data/2.5/weather?q=' + this.zip;
+
+    // define the pattern we should seek in any streams passed to jstream
     var jstream = JSONStream.parse(['weather', true, 'main']);
 
-    // though not used yet, let's include an instance of 'this' 
-    // so we can keep track of where the event is coming from
     jstream.pw = this;
+    // 'data' event is triggered each time jstream's pattern is found during JSON parsing     
     jstream.on('data', function(data){
-      this.pw.emit('found', data);
+      // collect findings and associate with the PatternWorker object for later use
+      this.pw.findings.push(data);
     });
 
+    // 'root' event is triggered when jstream reaches end of JSON
     jstream.on('root', function(root, count){
-      // though not consumed yet, this event could be helpful in ensuring
-      // all our PatternWorkers have completed before parsing response to user
+      // helpful in determining when all our PatternWorkers have completed
       this.pw.emit('done eating', this.pw);
     });
     
     var request = http.get(uri).on('response', function(response) {
       console.log('response received');
+      // pipe the http response stream into JSONStream interpreter
       response.pipe(jstream);
     });
   }
 }
 
+WeatherPW.prototype.parse_findings = function(){
+  if (this.findings.length < 1){
+    return false;
+  }
+  else{
+    var english = 'The weather in '+ this.zip +' is currently: ';
+    for (i = 0; i < this.findings.length; i++){
+      i > 1 ? english += ', ' : null;
+      english += this.findings[i];
+    }  
+    return english;
+  }
+  
+}
+
 /* SERVER EVENT HANDLING */
 io.on('connection', function(socket){
   socket.on('user command', function(msg){
+    var findings = {};
     var pw_list = [WeatherPW];
     for (i = 0; i < pw_list.length; i++){
       var pw = new pw_list[i];
-      pw.on('found', function(result){
-        io.emit('server reply', result);
+      pw.on('done eating', function(result){
+        var english = pw.parse_findings();
+        if (english){
+          io.emit('server reply', english);
+        }
       });
       var response = pw.eat(msg);
     }
