@@ -2,13 +2,14 @@
 
 <html>
   <head>
-    <title>Socket.IO chat</title>
+    <title>Paramaribo Prototype</title>
+    <link href='http://fonts.googleapis.com/css?family=Open+Sans' rel='stylesheet' type='text/css'>
     <style>
       * { margin: 0; padding: 0; box-sizing: border-box; }
-      body { font: 13px Helvetica, Arial; }
+      body { font: 20px 'Open Sans', Helvetica, Arial; }
       form { background: #000; padding: 3px; position: fixed; bottom: 0; width: 100%; }
-      form input { border: 0; padding: 10px; width: 90%; margin-right: .5%; }
-      form button { width: 9%; background: rgb(130, 224, 255); border: none; padding: 10px; }
+      form input { border: 0; padding: 10px; width: 90%; margin-right: .5%; font: 20px 'Open Sans', Helvetica, Arial;}
+      form button { width: 9%; background: rgb(130, 224, 255); border: none; padding: 10px; font: 20px 'Open Sans', Helvetica, Arial;}
       #messages { list-style-type: none; margin: 0; padding: 0; }
       #messages li { padding: 5px 10px; }
       #messages li:nth-child(odd) { background: #eee; }
@@ -25,7 +26,10 @@
         });
 
         socket.on('server reply', function(msg){
-          $('#messages').append($('<li>').text(msg));
+          $response = $('<li>').text(msg);
+          $response.hide();
+          $('#messages').append($response);
+          $response.fadeIn(200);
         });
       });
     </script>
