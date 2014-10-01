@@ -77,7 +77,7 @@ WeatherPW.prototype.parse_findings = function(){
   else{
     var english = 'The weather in '+ this.zip +' is currently: ';
     for (i = 0; i < this.findings.length; i++){
-      i > 1 ? english += ', ' : null;
+      i > 0 ? english += ', ' : null;
       english += this.findings[i];
     }  
     return english;
