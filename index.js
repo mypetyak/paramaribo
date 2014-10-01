@@ -31,7 +31,7 @@ PatternWorker.prototype.digest = function(matches){
 // Specific example of a PatternWorker subclass
 function WeatherPW(){
   PatternWorker.call(this);
-  this.pattern = /(?:weather\s+)(\d{5})/; 
+  this.pattern = /(?:weather\s+)(\d{5})/i; 
 }
 WeatherPW.prototype = Object.create(PatternWorker.prototype);
 WeatherPW.prototype.constructor = WeatherPW;
