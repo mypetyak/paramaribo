@@ -13,7 +13,7 @@ app.set('port', (process.env.PORT || 5000))
 // PatternWorker is the base interface for all pattern/response objects
 function PatternWorker(){
   events.EventEmitter.call(this);
-  this.findings = [];
+  this.findings = new Object();
   this.pattern = null;
 }
 PatternWorker.prototype = Object.create(events.EventEmitter.prototype);
@@ -43,23 +43,25 @@ WeatherPW.prototype.constructor = WeatherPW;
 // Redefine the 'digest' method for specific weather-related purpose
 WeatherPW.prototype.digest = function(matches){
   if (matches && matches.length > 1){
-    this.loc = matches[1];
+    var loc_raw = matches[1];
+
     // remove whitespace
-    this.loc_clean = this.loc.replace(/\s/g, '');
-    var uri = 'http://api.openweathermap.org/data/2.5/weather?q=' + this.loc_clean;
+    var loc_clean = loc_raw.replace(/\s/g, '');
+    var uri = 'http://api.openweathermap.org/data/2.5/weather?q=' + loc_clean;
 
-    // define the pattern we should seek in any streams passed to jstream
-    var jstream = JSONStream.parse(['weather', true, 'main']);
-
-    jstream.pw = this;
-    // 'data' event is triggered each time jstream's pattern is found during JSON parsing     
-    jstream.on('data', function(data){
-      // collect findings and associate with the PatternWorker object for later use
-      this.pw.findings.push(data);
-    });
+    // we'll search for JSON root. I think this does the trick.
+    var jstream_fuzzynow = JSONStream.parse(['$']);
+    jstream_fuzzynow.pw = this;
 
     // 'root' event is triggered when jstream reaches end of JSON
-    jstream.on('root', function(root, count){
+    jstream_fuzzynow.on('root', function(root, count){
+      var http_code = root.cod;
+      if (http_code == '200'){
+        this.pw.findings.city = root.name;
+        this.pw.findings.fuzzy = root.weather[0].description;
+        this.pw.findings.country = root.sys.country;
+        this.pw.findings.successful = true;
+      }
       // helpful in determining when all our PatternWorkers have completed
       this.pw.emit('done eating', this.pw);
     });
@@ -67,21 +69,17 @@ WeatherPW.prototype.digest = function(matches){
     var request = http.get(uri).on('response', function(response) {
       console.log('response received');
       // pipe the http response stream into JSONStream interpreter
-      response.pipe(jstream);
+      response.pipe(jstream_fuzzynow);
     });
   }
 }
 
 WeatherPW.prototype.parse_findings = function(){
-  if (this.findings.length < 1){
+  if (!this.findings.successful){
     return false;
   }
   else{
-    var english = 'The weather in '+ this.loc +' is currently: ';
-    for (i = 0; i < this.findings.length; i++){
-      i > 0 ? english += ', ' : null;
-      english += this.findings[i];
-    }  
+    var english = 'The weather in '+ this.findings.city +' is currently: ' + this.findings.fuzzy;
     return english;
   }
   
