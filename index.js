@@ -35,7 +35,7 @@ PatternWorker.prototype.digest = function(matches){
 // Specific example of a PatternWorker subclass
 function WeatherPW(){
   PatternWorker.call(this);
-  this.pattern = /(?:weather\s+)(\d{5})/i; 
+  this.pattern = /(?:weather\s+)(?:in\s+)?(\d{5}|[\w ]+,?\s*[\w ]*)$/i; 
 }
 WeatherPW.prototype = Object.create(PatternWorker.prototype);
 WeatherPW.prototype.constructor = WeatherPW;
@@ -43,8 +43,10 @@ WeatherPW.prototype.constructor = WeatherPW;
 // Redefine the 'digest' method for specific weather-related purpose
 WeatherPW.prototype.digest = function(matches){
   if (matches && matches.length > 1){
-    this.zip = matches[1];
-    var uri = 'http://api.openweathermap.org/data/2.5/weather?q=' + this.zip;
+    this.loc = matches[1];
+    // remove whitespace
+    this.loc_clean = this.loc.replace(/\s/g, '');
+    var uri = 'http://api.openweathermap.org/data/2.5/weather?q=' + this.loc_clean;
 
     // define the pattern we should seek in any streams passed to jstream
     var jstream = JSONStream.parse(['weather', true, 'main']);
@@ -75,7 +77,7 @@ WeatherPW.prototype.parse_findings = function(){
     return false;
   }
   else{
-    var english = 'The weather in '+ this.zip +' is currently: ';
+    var english = 'The weather in '+ this.loc +' is currently: ';
     for (i = 0; i < this.findings.length; i++){
       i > 0 ? english += ', ' : null;
       english += this.findings[i];
