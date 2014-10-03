@@ -17,7 +17,7 @@ var MessageManager = function(language){
 
     //Create the language classifier; loaded with default info
     this.classifier = natural.BayesClassifier;
-    natural.BayesClassifier.load('classifer.json', null, function(err, restored){
+    natural.BayesClassifier.load('./nlp/classifier.json', null, function(err, restored){
         classifier = restored;//just load it
       });
 

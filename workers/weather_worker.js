@@ -11,6 +11,9 @@ var WeatherWorker = function( ){
 util.inherits(WeatherWorker, MessageWorker);
 
 function eat(message, callback){
+	//clear anything previously swallowed
+	this.zip = ""; this.city = "";
+
 	var loc_pattern = /(\d{5})$/i;
 	matches = message.match(loc_pattern);
 	if(matches && matches.length > 1){
