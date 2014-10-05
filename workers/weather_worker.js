@@ -17,8 +17,8 @@ function eat(message, callback){
 	var loc_pattern = /(\d{5})$/i;
 	matches = message.match(loc_pattern);
 	if(matches && matches.length > 1){
-		this.zip = matches[0]
-		this.city = '';		
+		this.zip = matches[0];
+		this.city = '';
 	}
 
 	//Test that enough was swallowed to digest
@@ -60,7 +60,7 @@ function digest(callback){
         } else {
 			err = "It looks like you're trying to find weather for " + location + " but something went horribly, horribly, wrong.";
 			callback(err);
-		} 
+		}
 
     });
 
@@ -71,7 +71,7 @@ function digest(callback){
     });
 }
 
-//This function should be overwritten for any non-english workers 
+//This function should be overwritten for any non-english workers
 function parseResponse(results){
 	var response = 'The weather in '+ results.city +' is currently: ' + results.fuzzy;
 	return response;
